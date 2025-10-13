@@ -1,0 +1,18 @@
+DB_NAME = "TRAININGANDPLACEMENT"
+DB_USER = "postgres"
+DB_PASSWORD = "Muthu0311"
+DB_HOST = "localhost"
+DB_PORT = "5432"
+gmail_users = "developer.pclinfotech@gmail.com"
+gmail_passwords = "qlwv swvc ujzd nlis"
+sent_email = "fullstack.pclinfotech@gmail.com"
+
+
+# DB_NAME = "TRAININGANDPLACEMENT"
+# DB_USER = "postgres"
+# DB_PASSWORD = "9514"
+# DB_HOST = "147.79.66.39"
+# DB_PORT = "5432"
+# gmail_users = "developer.pclinfotech@gmail.com"
+# gmail_passwords = "qlwv swvc ujzd nlis"
+# sent_email = "pclinfotechltd@gmail.com"
