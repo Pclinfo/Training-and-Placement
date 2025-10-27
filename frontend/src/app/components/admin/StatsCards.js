@@ -1,3 +1,4 @@
+// filepath:frontend/src/app/statsCards/admin/page.js
 'use client';
 import React from 'react';
 import { BookOpen, Eye, CreditCard, Check, DollarSign } from 'lucide-react';
@@ -41,7 +42,7 @@ export default function StatsCards({ stats }) {
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <div key={index} className="bg-white rounded-xl shadow-sm p-6">
+          <div key={index} className="bg-white rounded-xl shadow-sm p-6 rounded-[19px]" style={{ backgroundColor: "rgb(185, 185, 185)" }}>
             <div className="flex items-center">
               <Icon className={`w-8 h-8 ${card.color}`} />
               <div className="ml-4">

@@ -54,7 +54,7 @@ export default function CourseModal({ course, onClose, onSave }) {
       }
 
       setSelectedImage(file);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -74,7 +74,7 @@ export default function CourseModal({ course, onClose, onSave }) {
         : 'http://localhost:7000/admin/courses';
 
       const formDataToSend = new FormData();
-      
+
       Object.keys(formData).forEach(key => {
         if (key === 'features') {
           formDataToSend.append(key, JSON.stringify(formData[key]));
@@ -144,12 +144,12 @@ export default function CourseModal({ course, onClose, onSave }) {
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Course Image
             </label>
-            
+
             {imagePreview ? (
               <div className="relative">
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
+                <img
+                  src={imagePreview}
+                  alt="Preview"
                   className="w-full h-48 object-cover rounded-lg"
                 />
                 <button
@@ -197,7 +197,6 @@ export default function CourseModal({ course, onClose, onSave }) {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
               <input

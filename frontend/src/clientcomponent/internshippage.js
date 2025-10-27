@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import InternshipModalForm from '@/modelform/InternshipModalForm';
+import InternshipsPage from '@/app/internships/page';
 
 
 const InternshipClient = () => {
@@ -45,123 +46,8 @@ const InternshipClient = () => {
       </div>
 
       {/* Cards Section */}
-      <div className="flex flex-col items-center mt-10">
-        <div className="flex flex-wrap justify-center gap-6 p-5">
-          {/* Card 1 */}
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/stack_develop.png" alt="Full Stack Developer" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">FULL STACK DEVELOPER</h3>
-          </div>
-
-
-
-          {/* Card 2 */}
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/ui_ux_desinger_1.png" alt="UI UX Designer" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">UI UX DESIGNER</h3>
-          </div>
-
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/data.png" alt="Data Analyst" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">DATA ANALYST</h3>
-          </div>
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/digital_market.png" alt="Digital Marketing" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">DIGITAL MARKETING</h3>
-          </div>
-
-        </div>
-
-        <InternshipModalForm isOpen={isModalOpen} onClose={closeModal}
-        />
-      </div>
-      <div className="flex flex-col items-center mt-10">
-        <div className="flex flex-wrap justify-center gap-6 p-5">
-          {/* Card 1 */}
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/Cyber_security.jpg" alt="Cybersecurity" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">Cyber Security</h3>
-          </div>
-
-
-
-          {/* Card 2 */}
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/Data_Science.jpg" alt="DataScience" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">Data Science</h3>
-          </div>
-
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/devops.png" alt="DevOps" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">DevOps</h3>
-          </div>
-          <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg w-[350px] p-4">
-            <img src="/internship/Robotics_automation.jpg" alt="Roboticsautomation" className="w-40 h-auto" />
-            <button onClick={openModal} className="flex items-center justify-between bg-[#004aad] text-white rounded py-2 px-4 mt-4 transition duration-300 hover:bg-[#00308a]">
-              View Course
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-            <h3 className="mt-4 text-lg font-normal text-gray-600 font-semibold">Robotics Automation</h3>
-          </div>
-
-        </div>
-
-        <InternshipModalForm isOpen={isModalOpen} onClose={closeModal}
-        />
+      <div className="items-center mt-10">
+        <InternshipsPage />
       </div>
     </div>
   );

@@ -107,7 +107,7 @@ const DynamicCoursesPage = () => {
         setError('Failed to fetch courses');
       }
     } catch (err) {
-      setError('Failed to connect to server');
+      setError('Failed to connect to backend server');
       console.error('Error fetching courses:', err);
     } finally {
       setLoading(false);
