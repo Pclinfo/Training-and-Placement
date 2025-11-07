@@ -221,21 +221,29 @@ export default function Navbar() {
                   Internship
                 </h6>
               </Link>
-             
-              <Link className='no-underline' href="/admin">
-                <h6 className={`text-base py-4 font-bold mb-0 cursor-pointer hover:text-red-600 relative pb-6 transition-colors duration-300 ${pathname === '/admin' ? 'text-red-600 after:w-full' : 'text-black'
+
+              <Link className='no-underline' href="/coursepage/projectpage">
+                <h6 className={`text-base py-4 font-bold mb-0 cursor-pointer hover:text-red-600 relative pb-6 transition-colors duration-300 ${pathname === '/coursepage/projectpage' ? 'text-red-600 after:w-full' : 'text-black'
                   } after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-red-600 after:transition-all after:duration-500 hover:after:w-full`}>
-                  admin
+                  projects
                 </h6>
               </Link>
+             
+        
               <Link className='no-underline' href="/subcourses">
                 <h6 className={`text-base py-4 font-bold mb-0 cursor-pointer hover:text-red-600 relative pb-6 transition-colors duration-300 ${pathname === '/subcourses' ? 'text-red-600 after:w-full' : 'text-black'} after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-red-600 after:transition-all after:duration-500 hover:after:w-full`}>
-                  CoursePaymentPage
+                  Training & Placement
                 </h6>
               </Link>
               <Link className='no-underline' href="/coursepage/contactpage">
                 <h6 className={`text-base py-4 font-bold mb-0 cursor-pointer hover:text-red-600 relative pb-6 transition-colors duration-300 ${pathname === '/coursepage/contactpage' ? 'text-red-600 after:w-full' : 'text-black'} after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-red-600 after:transition-all after:duration-500 hover:after:w-full`}>
                   Contact Us
+                </h6>
+              </Link>
+                    <Link className='no-underline' href="/admin">
+                <h6 className={`text-base py-4 font-bold mb-0 cursor-pointer hover:text-red-600 relative pb-6 transition-colors duration-300 ${pathname === '/admin' ? 'text-red-600 after:w-full' : 'text-black'
+                  } after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-red-600 after:transition-all after:duration-500 hover:after:w-full`}>
+                  Login
                 </h6>
               </Link>
             </div>
@@ -335,16 +343,28 @@ export default function Navbar() {
                   Internship
                 </p>
               </Link>
+               <Link className='block no-underline' href="/coursepage/projectpage" onClick={handleMobileMenu}>
+                <p className={`text-base font-semibold py-2 mb-0 ${pathname === '/coursepage/projectpage' ? 'text-red-400' : 'text-white'
+                  }`}>
+                  projects
+                </p>
+              </Link>
               <Link className='block no-underline' href="/subcourses" onClick={handleMobileMenu}>
                 <p className={`text-base font-semibold py-2 mb-0 ${pathname === '/subcourses' ? 'text-red-400' : 'text-white'
                   }`}>
-                  CoursePaymentPage
+                  Training & Placement
                 </p>
               </Link>
               <Link className='block no-underline' href="/coursepage/contactpage" onClick={handleMobileMenu}>
                 <p className={`text-base font-semibold py-2 mb-0 ${pathname === '/coursepage/contactpage' ? 'text-red-400' : 'text-white'
                   }`}>
                   Contact Us
+                </p>
+              </Link>
+              <Link className='block no-underline' href="/admin" onClick={handleMobileMenu}>
+                <p className={`text-base font-semibold py-2 mb-0 ${pathname === '/admin' ? 'text-red-400' : 'text-white'
+                  }`}>
+                  Login
                 </p>
               </Link>
 

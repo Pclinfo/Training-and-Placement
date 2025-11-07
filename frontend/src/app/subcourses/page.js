@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Clock, Users, Calendar, ChevronRight, Search, Filter } from 'lucide-react';
 import Layout from '@/components/Layout';
+import ContactModelForm from '@/modelform/ContactModalForm';
 
 // Configuration - Update this to match your backend URL
 const API_BASE_URL = 'http://localhost:7000';
@@ -21,6 +22,7 @@ const getImageUrl = (imageUrl) => {
 };
 
 const DynamicCoursesPage = () => {
+  const [popup, setPopup] = useState(false);
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,31 @@ const DynamicCoursesPage = () => {
     seconds: 10
   });
   const [isOfferActive, setIsOfferActive] = useState(true);
+  // Close popup on Escape key
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setPopup(false);
+      }
+    };
+
+    if (popup) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [popup]);
+
+  const handlePopupOpen = () => {
+    setPopup(true);
+  };
+
+  const handlePopupClose = () => {
+    setPopup(false);
+  };
+
 
   // Fetch courses from API
   useEffect(() => {
@@ -208,10 +235,14 @@ const DynamicCoursesPage = () => {
                   <span>4.9/5 Rating</span>
                 </div>
               </div>
-
-              <button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+               <button
+                onClick={handlePopupOpen}
+                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
                 Start Learning Today
               </button>
+
+              
             </div>
 
             {/* Dynamic Countdown Timer */}
@@ -457,12 +488,22 @@ const DynamicCoursesPage = () => {
           <p className="text-blue-100 text-xl mb-8 max-w-2xl mx-auto">
             Join thousands of professionals who have already upgraded their skills and advanced their careers.
           </p>
-          <button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105">
+          <button 
+                onClick={handlePopupOpen} className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105">
             Get Started Today
           </button>
         </div>
       </div>
     </div>
+     {/* Popup Form */}
+      {popup && (
+        <div className='fixed inset-0 flex items-center justify-center z-[9999] animate-fade-in'>
+          <div className='absolute inset-0  bg-opacity-50 backdrop-blur-sm' onClick={handlePopupClose}></div>
+          <div className='relative bg-white rounded-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl'>
+            <ContactModelForm close={handlePopupClose} />
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

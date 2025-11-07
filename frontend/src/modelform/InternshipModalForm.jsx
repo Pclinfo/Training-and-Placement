@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useRef, useEffect } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -196,15 +195,6 @@ export default function InternshipModalForm({ isOpen, onClose }) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
                 </div>
-                {/* <div>
-                  <label className="text-sm text-left block">Phone Number</label>
-                  <PhoneInput
-                    defaultCountry="IN"
-                    value={formData.mobile}
-                    onChange={handlePhoneChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div> */}
 
                 <div>
                   <label className="text-sm text-left block">Phone Number</label>
@@ -238,7 +228,7 @@ export default function InternshipModalForm({ isOpen, onClose }) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
 
-                  {showRoleList && filteredRoles.length > 0 && (
+                  {/* {showRoleList && filteredRoles.length > 0 && (
                     <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
                       {filteredRoles.map((role, index) => (
                         <li
@@ -250,7 +240,7 @@ export default function InternshipModalForm({ isOpen, onClose }) {
                         </li>
                       ))}
                     </ul>
-                  )}
+                  )} */}
                 </div>
               </div>
 

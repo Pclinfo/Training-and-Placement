@@ -2,6 +2,7 @@
 import os
 import logging
 from datetime import datetime
+from sqlalchemy import JSON
 from werkzeug.utils import secure_filename
 import uuid
 import json
@@ -105,6 +106,100 @@ def save_internship_image(file_obj):
     
     return f"/uploads/internships/{unique_filename}"
 
+def save_uploaded_file(file_obj, dest_folder=None):
+    """Save uploaded file with proper directory creation"""
+    if dest_folder is None:
+        dest_folder = UPLOAD_FOLDER
+    
+    if not file_obj or file_obj.filename == "":
+        return None
+    
+    # Create directory if it doesn't exist
+    os.makedirs(dest_folder, exist_ok=True)
+    
+    filename = secure_filename(file_obj.filename)
+    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    safe_name = f"{ts}_{filename}"
+    path = os.path.join(dest_folder, safe_name)
+    
+    file_obj.save(path)
+    return path
+
+#  after the save_project_image function
+def save_payment_screenshot(file_obj):
+    """Save uploaded payment screenshot and return the URL path"""
+    if not file_obj or file_obj.filename == "":
+        return None
+    
+    if not allowed_file(file_obj.filename):
+        raise ValueError("Invalid file type")
+    
+    filename = secure_filename(file_obj.filename)
+    ext = filename.rsplit('.', 1)[1].lower()
+    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+    
+    payment_screenshots_dir = os.path.join(UPLOAD_FOLDER, 'payment_screenshots')
+    os.makedirs(payment_screenshots_dir, exist_ok=True)
+    
+    filepath = os.path.join(payment_screenshots_dir, unique_filename)
+    file_obj.save(filepath)
+    
+    # Optional: Optimize image
+    try:
+        with Image.open(filepath) as img:
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            max_width = 1200
+            if img.width > max_width:
+                ratio = max_width / img.width
+                new_size = (max_width, int(img.height * ratio))
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+            
+            img.save(filepath, quality=85, optimize=True)
+    except Exception as e:
+        app.logger.warning(f"Image optimization failed: {e}")
+    
+    return f"/uploads/payment_screenshots/{unique_filename}"
+
+# --------------- PROJECT MANAGEMENT ENDPOINTS -----------------
+
+def save_project_image(file_obj):
+    """Save uploaded project image and return the URL path"""
+    if not file_obj or file_obj.filename == "":
+        return None
+    
+    if not allowed_file(file_obj.filename):
+        raise ValueError("Invalid file type")
+    
+    filename = secure_filename(file_obj.filename)
+    ext = filename.rsplit('.', 1)[1].lower()
+    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+    
+    projects_dir = os.path.join(UPLOAD_FOLDER, 'projects')
+    os.makedirs(projects_dir, exist_ok=True)
+    
+    filepath = os.path.join(projects_dir, unique_filename)
+    file_obj.save(filepath)
+    
+    # Optional: Optimize image
+    try:
+        with Image.open(filepath) as img:
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            max_width = 1200
+            if img.width > max_width:
+                ratio = max_width / img.width
+                new_size = (max_width, int(img.height * ratio))
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+            
+            img.save(filepath, quality=85, optimize=True)
+    except Exception as e:
+        app.logger.warning(f"Image optimization failed: {e}")
+    
+    return f"/uploads/projects/{unique_filename}"
+
 # --------------- basic paths & folders -----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "static")
@@ -184,18 +279,6 @@ class PclInfo(db.Model):
     message = db.Column(db.Text)
     date = db.Column(db.DateTime, server_default=db.func.now())
 
-class Internship(db.Model):
-    __tablename__ = "internship"
-    id = db.Column(db.Integer, primary_key=True)
-    fname = db.Column(db.String(50), nullable=False)
-    lname = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(50), nullable=False)
-    mobile = db.Column(db.String(20), nullable=False)
-    internship = db.Column(db.String(50), nullable=False)
-    message = db.Column(db.Text)
-    cv_path = db.Column(db.Text)
-    date = db.Column(db.DateTime, server_default=db.func.now())
-
 # --------------- NEW MODELS for Course Management ---------------
 class Admin(db.Model):
     __tablename__ = "admins"
@@ -252,11 +335,57 @@ class Payment(db.Model):
     amount = db.Column(db.Float)
     transaction_id = db.Column(db.String(200))
     payment_gateway_response = db.Column(db.JSON)
+    payment_screenshot = db.Column(db.String(500))  # NEW FIELD
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
     
     # Relationship
     course = db.relationship('Course', backref='payments')
+# ----------- NEW MODEL FOR INTERNSHIP APPLICATIONS -----------
+
+
+class Internship(db.Model):
+    __tablename__ = "internship"
+    id = db.Column(db.Integer, primary_key=True)
+    fname = db.Column(db.String(50), nullable=False)
+    lname = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(50), nullable=False)
+    mobile = db.Column(db.String(20), nullable=False)
+    internship = db.Column(db.String(50), nullable=False)
+    message = db.Column(db.Text)
+    cv_path = db.Column(db.Text)
+    date = db.Column(db.DateTime, server_default=db.func.now())
+
+
+class InternshipApplication(db.Model):
+    __tablename__ = "internship_applications"
+    id = db.Column(db.Integer, primary_key=True)
+    enrollment_id = db.Column(db.String(100), unique=True, nullable=False)
+    internship_id = db.Column(db.Integer, db.ForeignKey('internship_postings.id'), nullable=False)
+    fname = db.Column(db.String(50), nullable=False)
+    lname = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    mobile = db.Column(db.String(20), nullable=False)
+    experience_level = db.Column(db.String(50), default='Fresher')
+    portfolio_url = db.Column(db.String(500))
+    github_url = db.Column(db.String(500))
+    motivation = db.Column(db.Text, nullable=False)
+    resume_path = db.Column(db.Text)
+    gstin = db.Column(db.String(50))
+    billing_address = db.Column(db.Text)
+    landmark = db.Column(db.String(100))
+    district = db.Column(db.String(100))
+    state = db.Column(db.String(100))
+    preferred_start_date = db.Column(db.Date)
+    preferred_time = db.Column(db.String(50), default='Full-Time')
+    availability = db.Column(db.String(50), default='Immediate')
+    payment_status = db.Column(db.String(50), default='pending')  # pending, approved, rejected
+    validation_code = db.Column(db.String(10))
+    date = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+    
+    # Relationship
+    internship = db.relationship('InternshipPosting', backref='applications')
 
 
 # Add this new ORM model
@@ -281,6 +410,350 @@ class InternshipPosting(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
+
+# Update the ProjectEnrollment model to include payment_screenshot
+# Add this field to the ProjectEnrollment class:
+class ProjectEnrollment(db.Model):
+    __tablename__ = 'project_enrollments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    enrollment_id = db.Column(db.String(100), unique=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('project_postings.id'), nullable=False)
+    student_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    mobile = db.Column(db.String(20), nullable=False)
+    gstin = db.Column(db.String(50))
+    billing_address = db.Column(db.Text)
+    landmark = db.Column(db.Text)
+    district = db.Column(db.String(100))
+    state = db.Column(db.String(100))
+    preferred_start_date = db.Column(db.Date)
+    preferred_time = db.Column(db.String(50))
+    team_size = db.Column(db.String(20))
+    payment_method = db.Column(db.String(50))
+    payment_status = db.Column(db.String(50), default='pending')
+    amount = db.Column(db.Float)
+    transaction_id = db.Column(db.String(200))
+    validation_code = db.Column(db.String(10))
+    payment_screenshot = db.Column(db.String(500))  # NEW FIELD
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    project = db.relationship('ProjectPosting', backref='enrollments')
+
+
+# Update the ProjectPosting model to include pricing fields
+# Add these fields to the ProjectPosting class:
+class ProjectPosting(db.Model):
+    __tablename__ = 'project_postings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    detailed_description = db.Column(db.Text)
+    category = db.Column(db.String(100))
+    duration = db.Column(db.String(50))
+    project_type = db.Column(db.String(50))
+    technologies = db.Column(JSON)
+    difficulty_level = db.Column(db.String(50))
+    prerequisites = db.Column(JSON)
+    learning_outcomes = db.Column(JSON)
+    image_url = db.Column(db.String(500))
+    project_code = db.Column(db.String(50), unique=True)
+    slug = db.Column(db.String(200), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    total_enrollments = db.Column(db.Integer, default=0)
+    
+    # NEW PRICING FIELDS
+    price = db.Column(db.String(20))
+    original_price = db.Column(db.String(20))
+    course_fees = db.Column(db.String(20))
+    total_amount = db.Column(db.String(20))
+    discount = db.Column(db.String(20))
+    level = db.Column(db.String(50))
+    rating = db.Column(db.Float, default=4.5)
+    students_count = db.Column(db.String(20), default="0")
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+@app.route("/pclinfo", methods=["POST"])
+def save_pclinfo():
+    data = parse_request_data()
+    app.logger.debug("/pclinfo data: %s", data)
+    
+    attachment_path = None
+    if "file" in request.files:
+        attachment_path = save_uploaded_file(request.files["file"])
+
+    # Send enhanced email notification with attachment
+    handle_email_notification(data, attachment_path, use_enhanced=True)
+
+    try:
+        entry = PclInfo(
+            fname=data.get("fname") or "",
+            lname=data.get("lname") or "",
+            email=data.get("email") or "",
+            mobile=data.get("mobile") or "",
+            message=data.get("message"),
+        )
+        db.session.add(entry)
+        db.session.commit()
+        app.logger.info(f"PclInfo saved with ID: {entry.id}")
+        return jsonify({"success": True, "id": entry.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error("DB insert error /pclinfo: %s", e)
+        return jsonify({"error": "Database insert failed"}), 500
+
+# Update the create_project_enrollment endpoint to handle payment screenshot
+@app.route("/api/project-enrollments", methods=["POST"])
+def create_project_enrollment():
+    try:
+        app.logger.info("=== Starting Project Enrollment Submission ===")
+        
+        # Generate unique enrollment ID
+        enrollment_id = f"PROJ_ENR_{str(uuid.uuid4())[:12].upper()}"
+        
+        # Get project slug from form data
+        project_slug = request.form.get('project_slug')
+        if not project_slug:
+            return jsonify({'error': 'Project slug is required'}), 400
+        
+        # Get project
+        project = ProjectPosting.query.filter_by(slug=project_slug).first()
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        # Validate validation code
+        validation_code = request.form.get('validation_code', '').lower()
+        if validation_code != 'm2nz':
+            return jsonify({'error': 'Invalid validation code'}), 400
+        
+        # Handle payment screenshot upload
+        payment_screenshot_path = None
+        if 'payment_screenshot' in request.files:
+            screenshot_file = request.files['payment_screenshot']
+            app.logger.info(f"Screenshot file received: {screenshot_file.filename}")
+            
+            if screenshot_file and screenshot_file.filename:
+                try:
+                    # Validate file
+                    if screenshot_file.content_length and screenshot_file.content_length > 5 * 1024 * 1024:
+                        return jsonify({'error': 'Screenshot file size exceeds 5MB limit'}), 400
+                    
+                    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+                    file_ext = os.path.splitext(screenshot_file.filename)[1].lower()
+                    
+                    if file_ext not in allowed_extensions:
+                        return jsonify({'error': 'Invalid screenshot format. Please upload JPG, PNG, GIF, or WebP'}), 400
+                    
+                    payment_screenshot_path = save_payment_screenshot(screenshot_file)
+                    app.logger.info(f"Payment screenshot saved: {payment_screenshot_path}")
+                    
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+                except Exception as e:
+                    app.logger.error(f"Error saving screenshot: {e}")
+                    return jsonify({'error': 'Failed to upload screenshot'}), 500
+        
+        # Parse preferred start date
+        preferred_start_date = None
+        date_str = request.form.get('preferred_start_date')
+        if date_str:
+            try:
+                preferred_start_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # Create enrollment
+        enrollment = ProjectEnrollment(
+            enrollment_id=enrollment_id,
+            project_id=project.id,
+            student_name=request.form.get('name'),
+            email=request.form.get('email'),
+            mobile=request.form.get('mobile'),
+            gstin=request.form.get('gstin'),
+            billing_address=request.form.get('billing_address'),
+            landmark=request.form.get('landmark'),
+            district=request.form.get('district'),
+            state=request.form.get('state'),
+            preferred_start_date=preferred_start_date,
+            preferred_time=request.form.get('preferred_time'),
+            team_size=request.form.get('team_size'),
+            payment_method=request.form.get('payment_method'),
+            validation_code=validation_code,
+            payment_screenshot=payment_screenshot_path  # Save screenshot path
+        )
+        
+        db.session.add(enrollment)
+        
+        # Update project enrollment count
+        project.total_enrollments = (project.total_enrollments or 0) + 1
+        
+        db.session.commit()
+        
+        # Send email notification
+        email_data = {
+            'fullName': request.form.get('name'),
+            'email': request.form.get('email'),
+            'mobile': request.form.get('mobile'),
+            'project': project.title,
+            'enrollment_id': enrollment_id,
+            'team_size': request.form.get('team_size'),
+            'start_date': request.form.get('preferred_start_date')
+        }
+        handle_email_notification(email_data)
+        
+        return jsonify({
+            'success': True,
+            'enrollment_id': enrollment_id,
+            'project': project.title,
+            'message': 'Enrollment submitted successfully'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error creating project enrollment: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': 'Failed to process enrollment request'}), 500
+
+
+# Update the get_all_project_enrollments endpoint to include payment_screenshot
+@app.route("/admin/project-enrollments", methods=["GET"])
+@jwt_required()
+def get_all_project_enrollments():
+    try:
+        enrollments = db.session.query(ProjectEnrollment, ProjectPosting).join(ProjectPosting).all()
+        enrollments_list = []
+        
+        for enrollment, project in enrollments:
+            # Build full screenshot URL
+            screenshot_url = None
+            if enrollment.payment_screenshot:
+                screenshot_url = enrollment.payment_screenshot
+                if not screenshot_url.startswith('http'):
+                    screenshot_url = f"http://localhost:7000{screenshot_url}"
+            
+            enrollments_list.append({
+                'id': enrollment.id,
+                'enrollment_id': enrollment.enrollment_id,
+                'student_name': enrollment.student_name,
+                'email': enrollment.email,
+                'mobile': enrollment.mobile,
+                'project_title': project.title,
+                'project_code': project.project_code,
+                'team_size': enrollment.team_size,
+                'preferred_time': enrollment.preferred_time,
+                'preferred_start_date': enrollment.preferred_start_date.isoformat() if enrollment.preferred_start_date else None,
+                'payment_method': enrollment.payment_method,
+                'payment_status': enrollment.payment_status,
+                'amount': enrollment.amount,
+                'district': enrollment.district,
+                'state': enrollment.state,
+                'payment_screenshot': screenshot_url,  # NEW FIELD
+                'created_at': enrollment.created_at.isoformat()
+            })
+        
+        return jsonify({'success': True, 'enrollments': enrollments_list})
+        
+    except Exception as e:
+        app.logger.error(f"Error fetching project enrollments: {e}")
+        return jsonify({'error': 'Failed to fetch enrollments'}), 500
+
+
+# Add endpoint to serve payment screenshots
+@app.route("/uploads/payment_screenshots/<filename>")
+def serve_payment_screenshot(filename):
+    try:
+        screenshots_dir = os.path.join(UPLOAD_FOLDER, 'payment_screenshots')
+        if not os.path.exists(screenshots_dir):
+            app.logger.error(f"Payment screenshots directory does not exist: {screenshots_dir}")
+            return jsonify({'error': 'Screenshots directory not found'}), 404
+        
+        file_path = os.path.join(screenshots_dir, filename)
+        if not os.path.exists(file_path):
+            app.logger.error(f"Payment screenshot file not found: {file_path}")
+            return jsonify({'error': 'Screenshot file not found'}), 404
+        
+        return send_from_directory(screenshots_dir, filename)
+    except Exception as e:
+        app.logger.error(f"Error serving payment screenshot {filename}: {e}")
+        return jsonify({'error': 'Failed to serve screenshot'}), 500
+
+
+@app.route("/admin/project-enrollments/<int:enrollment_id>/status", methods=["PUT"])
+@jwt_required()
+def update_project_enrollment_status(enrollment_id):
+    data = parse_request_data()
+    
+    try:
+        enrollment = ProjectEnrollment.query.get(enrollment_id)
+        if not enrollment:
+            return jsonify({'error': 'Enrollment not found'}), 404
+        
+        enrollment.payment_status = data.get('status', 'pending')
+        enrollment.transaction_id = data.get('transaction_id')
+        enrollment.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Enrollment status updated'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating enrollment status: {e}")
+        return jsonify({'error': 'Failed to update enrollment status'}), 500
+
+
+
+# Also ensure the get_project_by_slug returns pricing fields
+@app.route("/api/projects/<slug>", methods=["GET"])
+def get_project_by_slug(slug):
+    try:
+        project = ProjectPosting.query.filter_by(slug=slug, is_active=True).first()
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        image_url = project.image_url
+        if image_url and not image_url.startswith('http'):
+            image_url = f"http://localhost:7000{image_url}"
+        
+        project_data = {
+            'id': project.id,
+            'title': project.title,
+            'description': project.description,
+            'detailed_description': project.detailed_description,
+            'category': project.category,
+            'duration': project.duration,
+            'project_type': project.project_type,
+            'difficulty_level': project.difficulty_level,
+            'technologies': project.technologies or [],
+            'prerequisites': project.prerequisites or [],
+            'learning_outcomes': project.learning_outcomes or [],
+            'image_url': image_url,
+            'slug': project.slug,
+            'project_code': project.project_code,
+            'total_enrollments': project.total_enrollments,
+            # Pricing fields
+            'price': project.price,
+            'original_price': project.original_price,
+            'course_fees': project.course_fees,
+            'total_amount': project.total_amount,
+            'discount': project.discount,
+            'level': project.level,
+            'rating': project.rating,
+            'students_count': project.students_count
+        }
+        return jsonify({'success': True, 'project': project_data})
+    except Exception as e:
+        app.logger.error(f"Error fetching project: {e}")
+        return jsonify({'error': 'Failed to fetch project'}), 500
+    
+    
 # --------------- create tables ---------------------
 with app.app_context():
     try:
@@ -790,6 +1263,7 @@ def update_payment_status(payment_id):
 @app.route("/enroll", methods=["POST"])
 def enroll_course():
     data = parse_request_data()
+    app.logger.debug("/enroll data: %s", data)
     handle_email_notification(data, use_enhanced=False)
     
     try:
@@ -802,9 +1276,11 @@ def enroll_course():
         )
         db.session.add(entry)
         db.session.commit()
+        app.logger.info(f"Course enrollment saved with ID: {entry.id}")
         return jsonify({"success": True, "enrollment_id": entry.id}), 201
     except Exception as e:
         db.session.rollback()
+        app.logger.error("DB insert error /enroll: %s", e)
         return jsonify({"error": "Database insert failed"}), 500
 
 
@@ -1098,201 +1574,600 @@ def get_internship_by_slug(slug):
         return jsonify({'error': 'Failed to fetch internship'}), 500
 
 
-# Add API endpoints
-# @app.route("/admin/internships", methods=["GET"])
-# @jwt_required()
-# def get_all_internships():
-#     try:
-#         internships = InternshipPosting.query.all()
-#         internships_list = [{
-#             'id': i.id,
-#             'title': i.title,
-#             'description': i.description,
-#             'detailed_description': i.detailed_description,
-#             'category': i.category,
-#             'duration': i.duration,
-#             'internship_type': i.internship_type,
-#             'location': i.location,
-#             'skills': i.skills,
-#             'eligibility': i.eligibility,
-#             'perks': i.perks,
-#             'image_url': i.image_url,
-#             'internship_code': i.internship_code,
-#             'slug': i.slug,
-#             'is_active': i.is_active,
-#             'total_applications': i.total_applications,
-#             'created_at': i.created_at.isoformat(),
-#             'updated_at': i.updated_at.isoformat()
-#         } for i in internships]
-#         return jsonify({'success': True, 'internships': internships_list})
-#     except Exception as e:
-#         app.logger.error(f"Error fetching internships: {e}")
-#         return jsonify({'error': 'Failed to fetch internships'}), 500
+
+# ----------- INTERNSHIP APPLICATION ENDPOINTS -----------
+
+@app.route("/api/internship-applications", methods=["POST"])
+def create_internship_application():
+    try:
+        app.logger.info("=== Starting Internship Application Submission ===")
+        
+        # Log received form data
+        app.logger.info(f"Form data keys: {list(request.form.keys())}")
+        app.logger.info(f"Files: {list(request.files.keys())}")
+        
+        # Generate unique enrollment ID
+        enrollment_id = f"INT_APP_{str(uuid.uuid4())[:12].upper()}"
+        app.logger.info(f"Generated enrollment ID: {enrollment_id}")
+        
+        # Get internship by slug
+        internship_slug = request.form.get('internship_slug')
+        app.logger.info(f"Looking for internship with slug: {internship_slug}")
+        
+        if not internship_slug:
+            app.logger.error("Missing internship_slug")
+            return jsonify({'error': 'Internship slug is required'}), 400
+        
+        internship = InternshipPosting.query.filter_by(slug=internship_slug).first()
+        
+        if not internship:
+            app.logger.error(f"Internship not found for slug: {internship_slug}")
+            return jsonify({'error': 'Internship not found'}), 404
+        
+        app.logger.info(f"Found internship: {internship.title}")
+        
+        # Validate validation code
+        validation_code = request.form.get('validation_code', '').strip().lower()
+        app.logger.info(f"Validation code received: {validation_code}")
+        
+        if validation_code != 'm2nz':
+            app.logger.error(f"Invalid validation code: {validation_code}")
+            return jsonify({'error': 'Invalid validation code'}), 400
+        
+        # Validate required fields
+        required_fields = ['fname', 'lname', 'email', 'mobile', 'motivation']
+        missing_fields = [field for field in required_fields if not request.form.get(field)]
+        
+        if missing_fields:
+            app.logger.error(f"Missing required fields: {missing_fields}")
+            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+        
+        # Handle resume upload
+        resume_path = None
+        if 'resume' in request.files:
+            resume_file = request.files['resume']
+            app.logger.info(f"Resume file received: {resume_file.filename}")
+            
+            if resume_file and resume_file.filename:
+                try:
+                    # Create resumes directory if it doesn't exist
+                    resumes_dir = os.path.join(UPLOAD_FOLDER, 'resumes')
+                    os.makedirs(resumes_dir, exist_ok=True)
+                    app.logger.info(f"Resumes directory: {resumes_dir}")
+                    
+                    # Validate file
+                    if resume_file.content_length and resume_file.content_length > 5 * 1024 * 1024:
+                        return jsonify({'error': 'Resume file size exceeds 5MB limit'}), 400
+                    
+                    allowed_extensions = {'.pdf', '.doc', '.docx'}
+                    file_ext = os.path.splitext(resume_file.filename)[1].lower()
+                    
+                    if file_ext not in allowed_extensions:
+                        return jsonify({'error': 'Invalid resume format. Please upload PDF, DOC, or DOCX'}), 400
+                    
+                    # Save file
+                    filename = secure_filename(resume_file.filename)
+                    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+                    unique_filename = f"{timestamp}_{filename}"
+                    full_path = os.path.join(resumes_dir, unique_filename)
+                    
+                    resume_file.save(full_path)
+                    resume_path = f"/uploads/resumes/{unique_filename}"
+                    app.logger.info(f"Resume saved successfully: {resume_path}")
+                    
+                except Exception as e:
+                    app.logger.error(f"Error saving resume: {e}")
+                    import traceback
+                    app.logger.error(traceback.format_exc())
+                    return jsonify({'error': f'Failed to upload resume: {str(e)}'}), 500
+        else:
+            app.logger.warning("No resume file in request")
+            return jsonify({'error': 'Resume is required'}), 400
+        
+        # Parse preferred start date
+        preferred_start_date = None
+        date_str = request.form.get('preferred_start_date')
+        if date_str:
+            try:
+                preferred_start_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                app.logger.info(f"Parsed start date: {preferred_start_date}")
+            except ValueError as e:
+                app.logger.warning(f"Invalid date format: {date_str} - {e}")
+                # Continue without date rather than failing
+        
+        # Create application record
+        app.logger.info("Creating InternshipApplication record...")
+        
+        application = InternshipApplication(
+            enrollment_id=enrollment_id,
+            internship_id=internship.id,
+            fname=request.form.get('fname').strip(),
+            lname=request.form.get('lname').strip(),
+            email=request.form.get('email').strip(),
+            mobile=request.form.get('mobile').strip(),
+            experience_level=request.form.get('experience_level', 'Fresher'),
+            portfolio_url=request.form.get('portfolio_url', '').strip() or None,
+            github_url=request.form.get('github_url', '').strip() or None,
+            motivation=request.form.get('motivation').strip(),
+            resume_path=resume_path,
+            gstin=request.form.get('gstin', '').strip() or None,
+            billing_address=request.form.get('billing_address', '').strip() or None,
+            landmark=request.form.get('landmark', '').strip() or None,
+            district=request.form.get('district', '').strip() or None,
+            state=request.form.get('state', '').strip() or None,
+            preferred_start_date=preferred_start_date,
+            preferred_time=request.form.get('preferred_time', 'Full-Time'),
+            availability=request.form.get('availability', 'Immediate'),
+            payment_status='pending',
+            validation_code=validation_code
+        )
+        
+        db.session.add(application)
+        app.logger.info("Application added to session")
+        
+        # Update internship total applications
+        internship.total_applications = (internship.total_applications or 0) + 1
+        app.logger.info(f"Updated total applications: {internship.total_applications}")
+        
+        # Commit to database
+        db.session.commit()
+        app.logger.info("Database commit successful")
+        
+        # Send email notification
+        try:
+            email_data = {
+                'fullName': f"{request.form.get('fname')} {request.form.get('lname')}",
+                'email': request.form.get('email'),
+                'mobile': request.form.get('mobile'),
+                'internship': internship.title,
+                'enrollment_id': enrollment_id,
+                'experience_level': request.form.get('experience_level', 'Fresher')
+            }
+            handle_email_notification(email_data)
+            app.logger.info("Email notification sent")
+        except Exception as email_error:
+            # Log but don't fail the request if email fails
+            app.logger.error(f"Email notification failed: {email_error}")
+        
+        app.logger.info("=== Application submitted successfully ===")
+        
+        return jsonify({
+            'success': True,
+            'enrollment_id': enrollment_id,
+            'internship': internship.title,
+            'message': 'Application submitted successfully'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"=== ERROR in create_internship_application ===")
+        app.logger.error(f"Error: {str(e)}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({
+            'error': 'Failed to submit application. Please try again.',
+            'details': str(e) if app.debug else None
+        }), 500
 
 
-# ... (keep other existing endpoints)
-# @app.route("/admin/internships", methods=["POST"])
-# @jwt_required()
-# def create_internship():
-#     try:
-#         data = request.get_json()
+# Keep only THIS ONE (remove the other)
+@app.route("/uploads/resumes/<filename>")
+def serve_resume(filename):
+    try:
+        resumes_dir = os.path.join(UPLOAD_FOLDER, 'resumes')
+        if not os.path.exists(resumes_dir):
+            app.logger.error(f"Resumes directory does not exist: {resumes_dir}")
+            return jsonify({'error': 'Resumes directory not found'}), 404
         
-#         # Validate required fields
-#         required_fields = ['title', 'description', 'category', 'duration', 'internship_type']
-#         for field in required_fields:
-#             if field not in data or not data[field]:
-#                 return jsonify({'error': f'{field} is required'}), 400
+        file_path = os.path.join(resumes_dir, filename)
+        if not os.path.exists(file_path):
+            app.logger.error(f"Resume file not found: {file_path}")
+            return jsonify({'error': 'Resume file not found'}), 404
         
-#         # Generate unique internship code and slug
-#         internship_code = f"INT-{uuid.uuid4().hex[:8].upper()}"
-#         slug = data['title'].lower().replace(' ', '-') + f"-{uuid.uuid4().hex[:6]}"
+        return send_from_directory(resumes_dir, filename)
+    except Exception as e:
+        app.logger.error(f"Error serving resume {filename}: {e}")
+        return jsonify({'error': 'Failed to serve resume'}), 500
+
+@app.route("/admin/internship-applications", methods=["GET"])
+@jwt_required()
+def get_all_internship_applications():
+    try:
+        # Join applications with internships to get full details
+        applications = db.session.query(
+            InternshipApplication, 
+            InternshipPosting
+        ).join(InternshipPosting).all()
         
-#         # Create new internship posting
-#         new_internship = InternshipPosting(
-#             title=data['title'],
-#             description=data['description'],
-#             detailed_description=data.get('detailed_description', ''),
-#             category=data['category'],
-#             duration=data['duration'],
-#             internship_type=data['internship_type'],
-#             location=data.get('location', ''),
-#             skills=data.get('skills', []),
-#             eligibility=data.get('eligibility', ''),
-#             perks=data.get('perks', []),
-#             image_url=data.get('image_url', ''),
-#             internship_code=internship_code,
-#             slug=slug,
-#             is_active=data.get('is_active', True)
-#         )
+        applications_list = []
         
-#         db.session.add(new_internship)
-#         db.session.commit()
+        for application, internship in applications:
+            applications_list.append({
+                'id': application.id,
+                'enrollment_id': application.enrollment_id,
+                'fname': application.fname,
+                'lname': application.lname,
+                'email': application.email,
+                'mobile': application.mobile,
+                'internship_title': internship.title,
+                'internship_slug': internship.slug,
+                'internship_code': internship.internship_code,
+                'experience_level': application.experience_level,
+                'portfolio_url': application.portfolio_url,
+                'github_url': application.github_url,
+                'motivation': application.motivation,
+                'resume_path': application.resume_path,
+                'gstin': application.gstin,
+                'billing_address': application.billing_address,
+                'district': application.district,
+                'state': application.state,
+                'preferred_start_date': application.preferred_start_date.isoformat() if application.preferred_start_date else None,
+                'preferred_time': application.preferred_time,
+                'availability': application.availability,
+                'payment_status': application.payment_status,
+                'date': application.date.isoformat(),
+                'updated_at': application.updated_at.isoformat()
+            })
         
-#         return jsonify({
-#             'success': True,
-#             'message': 'Internship created successfully',
-#             'internship': {
-#                 'id': new_internship.id,
-#                 'title': new_internship.title,
-#                 'description': new_internship.description,
-#                 'detailed_description': new_internship.detailed_description,
-#                 'category': new_internship.category,
-#                 'duration': new_internship.duration,
-#                 'internship_type': new_internship.internship_type,
-#                 'location': new_internship.location,
-#                 'skills': new_internship.skills,
-#                 'eligibility': new_internship.eligibility,
-#                 'perks': new_internship.perks,
-#                 'image_url': new_internship.image_url,
-#                 'internship_code': new_internship.internship_code,
-#                 'slug': new_internship.slug,
-#                 'is_active': new_internship.is_active,
-#                 'total_applications': new_internship.total_applications,
-#                 'created_at': new_internship.created_at.isoformat(),
-#                 'updated_at': new_internship.updated_at.isoformat()
-#             }
-#         }), 201
+        return jsonify({'success': True, 'applications': applications_list})
         
-#     except Exception as e:
-#         db.session.rollback()
-#         app.logger.error(f"Error creating internship: {e}")
-#         return jsonify({'error': 'Failed to create internship'}), 500
+    except Exception as e:
+        app.logger.error(f"Error fetching internship applications: {e}")
+        return jsonify({'error': 'Failed to fetch applications'}), 500
 
 
-# @app.route("/admin/internships/<int:internship_id>", methods=["PUT"])
-# @jwt_required()
-# def update_internship(internship_id):
-#     try:
-#         internship = InternshipPosting.query.get(internship_id)
+@app.route("/admin/internship-applications/<int:application_id>/status", methods=["PUT"])
+@jwt_required()
+def update_internship_application_status(application_id):
+    data = parse_request_data()
+    
+    try:
+        application = InternshipApplication.query.get(application_id)
+        if not application:
+            return jsonify({'error': 'Application not found'}), 404
         
-#         if not internship:
-#             return jsonify({'error': 'Internship not found'}), 404
+        application.payment_status = data.get('status', 'pending')
+        application.updated_at = datetime.utcnow()
         
-#         data = request.get_json()
+        db.session.commit()
         
-#         # Update fields if provided
-#         if 'title' in data:
-#             internship.title = data['title']
-#         if 'description' in data:
-#             internship.description = data['description']
-#         if 'detailed_description' in data:
-#             internship.detailed_description = data['detailed_description']
-#         if 'category' in data:
-#             internship.category = data['category']
-#         if 'duration' in data:
-#             internship.duration = data['duration']
-#         if 'internship_type' in data:
-#             internship.internship_type = data['internship_type']
-#         if 'location' in data:
-#             internship.location = data['location']
-#         if 'skills' in data:
-#             internship.skills = data['skills']
-#         if 'eligibility' in data:
-#             internship.eligibility = data['eligibility']
-#         if 'perks' in data:
-#             internship.perks = data['perks']
-#         if 'image_url' in data:
-#             internship.image_url = data['image_url']
-#         if 'is_active' in data:
-#             internship.is_active = data['is_active']
+        return jsonify({
+            'success': True, 
+            'message': 'Application status updated'
+        })
         
-#         db.session.commit()
-        
-#         return jsonify({
-#             'success': True,
-#             'message': 'Internship updated successfully',
-#             'internship': {
-#                 'id': internship.id,
-#                 'title': internship.title,
-#                 'description': internship.description,
-#                 'detailed_description': internship.detailed_description,
-#                 'category': internship.category,
-#                 'duration': internship.duration,
-#                 'internship_type': internship.internship_type,
-#                 'location': internship.location,
-#                 'skills': internship.skills,
-#                 'eligibility': internship.eligibility,
-#                 'perks': internship.perks,
-#                 'image_url': internship.image_url,
-#                 'internship_code': internship.internship_code,
-#                 'slug': internship.slug,
-#                 'is_active': internship.is_active,
-#                 'total_applications': internship.total_applications,
-#                 'created_at': internship.created_at.isoformat(),
-#                 'updated_at': internship.updated_at.isoformat()
-#             }
-#         })
-        
-#     except Exception as e:
-#         db.session.rollback()
-#         app.logger.error(f"Error updating internship: {e}")
-#         return jsonify({'error': 'Failed to update internship'}), 500
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating application status: {e}")
+        return jsonify({'error': 'Failed to update application status'}), 500
 
 
-# @app.route("/admin/internships/<int:internship_id>", methods=["DELETE"])
-# @jwt_required()
-# def delete_internship(internship_id):
-#     try:
-#         internship = InternshipPosting.query.get(internship_id)
+@app.route("/admin/internship-applications/<int:application_id>", methods=["DELETE"])
+@jwt_required()
+def delete_internship_application(application_id):
+    try:
+        application = InternshipApplication.query.get(application_id)
+        if not application:
+            return jsonify({'error': 'Application not found'}), 404
         
-#         if not internship:
-#             return jsonify({'error': 'Internship not found'}), 404
+        # Delete resume file if exists
+        if application.resume_path and os.path.exists(application.resume_path):
+            try:
+                os.remove(application.resume_path)
+            except Exception as e:
+                app.logger.warning(f"Failed to delete resume file: {e}")
         
-#         # Soft delete - just set is_active to False
-#         internship.is_active = False
-#         db.session.commit()
+        db.session.delete(application)
+        db.session.commit()
         
-#         return jsonify({
-#             'success': True,
-#             'message': 'Internship deactivated successfully'
-#         })
+        return jsonify({'success': True, 'message': 'Application deleted'})
         
-#     except Exception as e:
-#         db.session.rollback()
-#         app.logger.error(f"Error deleting internship: {e}")
-#         return jsonify({'error': 'Failed to delete internship'}), 500
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting application: {e}")
+        return jsonify({'error': 'Failed to delete application'}), 500
+
+    
+# ----------- projects APPLICATION ENDPOINTS -----------
+
+@app.route("/admin/projects", methods=["GET"])
+@jwt_required()
+def get_all_projects_admin():
+    try:
+        projects = ProjectPosting.query.all()
+        projects_list = []
+        for project in projects:
+            projects_list.append({
+                'id': project.id,
+                'title': project.title,
+                'description': project.description,
+                'detailed_description': project.detailed_description,
+                'category': project.category,
+                'duration': project.duration,
+                'project_type': project.project_type,
+                'technologies': project.technologies,
+                'difficulty_level': project.difficulty_level,
+                'prerequisites': project.prerequisites,
+                'learning_outcomes': project.learning_outcomes,
+                'image_url': project.image_url,
+                'project_code': project.project_code,
+                'slug': project.slug,
+                'is_active': project.is_active,
+                'total_enrollments': project.total_enrollments,
+                'created_at': project.created_at.isoformat(),
+                'updated_at': project.updated_at.isoformat()
+            })
+        return jsonify({'success': True, 'projects': projects_list})
+    except Exception as e:
+        app.logger.error(f"Error fetching projects: {e}")
+        return jsonify({'error': 'Failed to fetch projects'}), 500
+
+
+
+# Update create_project endpoint to handle pricing fields
+@app.route("/admin/projects", methods=["POST"])
+@jwt_required()
+def create_project():
+    try:
+        app.logger.info("Creating new project...")
+        
+        # Handle file upload
+        image_url = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                try:
+                    image_url = save_project_image(file)
+                    app.logger.info(f"Image saved: {image_url}")
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+        
+        # Get form data
+        data = request.form.to_dict()
+        
+        # Parse JSON fields
+        technologies = []
+        if 'technologies' in data:
+            tech_data = data['technologies']
+            if isinstance(tech_data, str):
+                try:
+                    technologies = json.loads(tech_data)
+                except json.JSONDecodeError:
+                    technologies = [t.strip() for t in tech_data.replace('\n', ',').split(',') if t.strip()]
+            elif isinstance(tech_data, list):
+                technologies = tech_data
+        
+        prerequisites = []
+        if 'prerequisites' in data:
+            prereq_data = data['prerequisites']
+            if isinstance(prereq_data, str):
+                try:
+                    prerequisites = json.loads(prereq_data)
+                except json.JSONDecodeError:
+                    prerequisites = [p.strip() for p in prereq_data.replace('\n', ',').split(',') if p.strip()]
+            elif isinstance(prereq_data, list):
+                prerequisites = prereq_data
+        
+        learning_outcomes = []
+        if 'learning_outcomes' in data:
+            outcomes_data = data['learning_outcomes']
+            if isinstance(outcomes_data, str):
+                try:
+                    learning_outcomes = json.loads(outcomes_data)
+                except json.JSONDecodeError:
+                    learning_outcomes = [o.strip() for o in outcomes_data.replace('\n', ',').split(',') if o.strip()]
+            elif isinstance(outcomes_data, list):
+                learning_outcomes = outcomes_data
+        
+        # Generate unique slug and code
+        base_slug = data.get('title', '').lower().replace(' ', '-')
+        slug = base_slug
+        counter = 1
+        while ProjectPosting.query.filter_by(slug=slug).first():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        
+        project_code = data.get('project_code')
+        if not project_code:
+            project_code = f"PROJ-{str(uuid.uuid4())[:8].upper()}"
+        
+        final_image_url = image_url or data.get('image_url', '')
+        
+        if not data.get('title'):
+            return jsonify({'error': 'Title is required'}), 400
+        
+        # Create project with pricing fields
+        project = ProjectPosting(
+            title=data.get('title'),
+            description=data.get('description', ''),
+            detailed_description=data.get('detailed_description', ''),
+            category=data.get('category', ''),
+            duration=data.get('duration', '4 Weeks'),
+            project_type=data.get('project_type', 'individual'),
+            technologies=technologies,
+            difficulty_level=data.get('difficulty_level', 'Intermediate'),
+            prerequisites=prerequisites,
+            learning_outcomes=learning_outcomes,
+            image_url=final_image_url,
+            project_code=project_code,
+            slug=slug,
+            is_active=data.get('is_active', 'true').lower() == 'true',
+            # NEW PRICING FIELDS
+            price=data.get('price', ''),
+            original_price=data.get('original_price', ''),
+            course_fees=data.get('course_fees', ''),
+            total_amount=data.get('total_amount', ''),
+            discount=data.get('discount', ''),
+            level=data.get('level', ''),
+            rating=float(data.get('rating', 4.5)),
+            students_count=data.get('students_count', '0')
+        )
+        
+        db.session.add(project)
+        db.session.commit()
+        
+        app.logger.info(f"Project created successfully: {project.id}")
+        
+        return jsonify({
+            'success': True,
+            'project_id': project.id,
+            'slug': project.slug,
+            'image_url': final_image_url,
+            'message': 'Project created successfully'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error creating project: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+
+# Update update_project endpoint to handle pricing fields
+@app.route("/admin/projects/<int:project_id>", methods=["PUT"])
+@jwt_required()
+def update_project(project_id):
+    try:
+        project = ProjectPosting.query.get(project_id)
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        app.logger.info(f"Updating project {project_id}...")
+        
+        # Handle file upload
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                try:
+                    image_url = save_project_image(file)
+                    project.image_url = image_url
+                    app.logger.info(f"New image uploaded: {image_url}")
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+        
+        data = request.form.to_dict()
+        
+        # Parse JSON fields (same as create)
+        if 'technologies' in data:
+            tech_data = data['technologies']
+            if isinstance(tech_data, str):
+                try:
+                    project.technologies = json.loads(tech_data)
+                except json.JSONDecodeError:
+                    project.technologies = [t.strip() for t in tech_data.replace('\n', ',').split(',') if t.strip()]
+            elif isinstance(tech_data, list):
+                project.technologies = tech_data
+        
+        if 'prerequisites' in data:
+            prereq_data = data['prerequisites']
+            if isinstance(prereq_data, str):
+                try:
+                    project.prerequisites = json.loads(prereq_data)
+                except json.JSONDecodeError:
+                    project.prerequisites = [p.strip() for p in prereq_data.replace('\n', ',').split(',') if p.strip()]
+            elif isinstance(prereq_data, list):
+                project.prerequisites = prereq_data
+        
+        if 'learning_outcomes' in data:
+            outcomes_data = data['learning_outcomes']
+            if isinstance(outcomes_data, str):
+                try:
+                    project.learning_outcomes = json.loads(outcomes_data)
+                except json.JSONDecodeError:
+                    project.learning_outcomes = [o.strip() for o in outcomes_data.replace('\n', ',').split(',') if o.strip()]
+            elif isinstance(outcomes_data, list):
+                project.learning_outcomes = outcomes_data
+        
+        # Update other fields including pricing
+        update_fields = ['title', 'description', 'detailed_description', 'category',
+                        'duration', 'project_type', 'difficulty_level',
+                        'price', 'original_price', 'course_fees', 'total_amount',
+                        'discount', 'level', 'students_count']
+        
+        for field in update_fields:
+            if field in data:
+                setattr(project, field, data[field])
+        
+        if 'rating' in data:
+            project.rating = float(data['rating'])
+        
+        if 'is_active' in data:
+            project.is_active = data['is_active'].lower() == 'true'
+        
+        if 'image' not in request.files and 'image_url' in data:
+            project.image_url = data['image_url']
+        
+        project.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        app.logger.info(f"Project {project_id} updated successfully")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Project updated successfully',
+            'image_url': project.image_url
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating project: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/admin/projects/<int:project_id>", methods=["DELETE"])
+@jwt_required()
+def delete_project(project_id):
+    try:
+        project = ProjectPosting.query.get(project_id)
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        project.is_active = False  # Soft delete
+        project.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Project deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting project: {e}")
+        return jsonify({'error': 'Failed to delete project'}), 500
+
+
+# Public endpoints for listing projects
+@app.route("/api/projects", methods=["GET"])
+def get_public_projects():
+    try:
+        projects = ProjectPosting.query.filter_by(is_active=True).all()
+        projects_list = []
+        for project in projects:
+            image_url = project.image_url
+            if image_url and not image_url.startswith('http'):
+                image_url = f"http://localhost:7000{image_url}"
+            
+            projects_list.append({
+                'id': project.id,
+                'title': project.title,
+                'description': project.description,
+                'category': project.category,
+                'duration': project.duration,
+                'project_type': project.project_type,
+                'difficulty_level': project.difficulty_level,
+                'technologies': project.technologies or [],
+                'image_url': image_url,
+                'slug': project.slug,
+                'project_code': project.project_code,
+                'total_enrollments': project.total_enrollments
+            })
+        return jsonify({'success': True, 'projects': projects_list})
+    except Exception as e:
+        app.logger.error(f"Error fetching public projects: {e}")
+        return jsonify({'error': 'Failed to fetch projects'}), 500
 
 # --------------- static serving -----------------
+
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):

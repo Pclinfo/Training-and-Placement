@@ -1,10 +1,10 @@
-// frontend/src/app/components/admin/CourseTab.js
+// frontend/src/components/admin/ProjectsTab.js
 'use client';
 import React from 'react';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Code, Users } from 'lucide-react';
 
-export default function CoursesTab({ 
-  courses, 
+export default function ProjectsTab({ 
+  projects, 
   loading, 
   searchTerm, 
   setSearchTerm, 
@@ -12,24 +12,20 @@ export default function CoursesTab({
   onEdit, 
   onAdd 
 }) {
-  // Helper function to get full         image URL
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) {
       return '/api/placeholder/64/64';
     }
     
-    // If it's already a full URL (http/https), return as is
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
     }
     
-    // If it's a relative path from uploads, construct full URL
     if (imageUrl.startsWith('/uploads/')) {
       return `http://localhost:7000${imageUrl}`;
     }
     
-    // If it's just the filename, construct full path
-    return `http://localhost:7000/uploads/courses/${imageUrl}`;
+    return `http://localhost:7000/uploads/projects/${imageUrl}`;
   };
 
   return (
@@ -40,7 +36,7 @@ export default function CoursesTab({
             <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search courses..."
+              placeholder="Search projects..."
               className="text-black pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -53,39 +49,42 @@ export default function CoursesTab({
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Course
+          Add Project
         </button>
       </div>
 
       {loading ? (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-2">Loading courses...</p>
+          <p className="text-gray-600 mt-2">Loading projects...</p>
         </div>
-      ) : !courses || courses.length === 0 ? (
+      ) : !projects || projects.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500 text-lg">No courses found</p>
-          <p className="text-gray-400 text-sm mt-2">Click "Add Course" to create your first course</p>
+          <p className="text-gray-500 text-lg">No projects found</p>
+          <p className="text-gray-400 text-sm mt-2">Click "Add Project" to create your first project</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-300" >
+            <thead className="bg-gray-300">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Course
+                  Project
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Category
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Instructor
+                  Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
+                  Difficulty
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Students
+                  Duration
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Enrollments
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -96,13 +95,13 @@ export default function CoursesTab({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {courses.map((course) => (
-                <tr key={course.id} className="hover:bg-gray-50">
+              {projects.map((project) => (
+                <tr key={project.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <img
-                        src={getImageUrl(course.image_url)}
-                        alt={course.title}
+                        src={getImageUrl(project.image_url)}
+                        alt={project.title}
                         className="w-12 h-12 rounded-lg object-cover mr-4"
                         onError={(e) => {
                           e.target.onerror = null;
@@ -110,47 +109,63 @@ export default function CoursesTab({
                         }}
                       />
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{course.title}</div>
-                        <div className="text-sm text-gray-500">{course.course_code}</div>
+                        <div className="text-sm font-medium text-gray-900">{project.title}</div>
+                        <div className="text-sm text-gray-500">{project.project_code}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {course.category}
+                      {project.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{course.instructor}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">₹{course.total_amount}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{course.students}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900 capitalize">
+                    {project.project_type}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      project.difficulty_level === 'Beginner' ? 'bg-green-100 text-green-800' :
+                      project.difficulty_level === 'Intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {project.difficulty_level}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{project.duration}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center">
+                      <Users className="w-4 h-4 mr-1 text-gray-400" />
+                      {project.total_enrollments || 0}
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        course.is_active
+                        project.is_active
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {course.is_active ? 'Active' : 'Inactive'}
+                      {project.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => onEdit(course)}
+                        onClick={() => onEdit(project)}
                         className="text-blue-600 hover:text-blue-900"
-                        title="Edit course"
+                        title="Edit project"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => {
-                          if (window.confirm(`Are you sure you want to delete "${course.title}"?`)) {
-                            onDelete(course.id);
+                          if (window.confirm(`Are you sure you want to delete "${project.title}"?`)) {
+                            onDelete(project.id);
                           }
                         }}
                         className="text-red-600 hover:text-red-900"
-                        title="Delete course"
+                        title="Delete project"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -165,4 +180,3 @@ export default function CoursesTab({
     </div>
   );
 }
-

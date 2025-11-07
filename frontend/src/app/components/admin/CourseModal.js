@@ -1,3 +1,4 @@
+// frontend/src/app/components/admin/CourseModal.js
 import React, { useState, useEffect } from 'react';
 import { Plus, X, Upload, ImageIcon } from 'lucide-react';
 

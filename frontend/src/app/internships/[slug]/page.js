@@ -1,11 +1,13 @@
 // frontend/src/app/internships/[slug]/page.js
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { MapPin, Clock, Briefcase, CheckCircle, Award, ArrowLeft } from 'lucide-react';
+import Layout from '@/components/Layout';
 
 const InternshipDetailPage = () => {
   const params = useParams();
+  const router = useRouter();
   const [internship, setInternship] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +31,10 @@ const InternshipDetailPage = () => {
     }
   };
 
+  const handleApplyClick = () => {
+    router.push(`/internships/${params.slug}/enroll`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -39,6 +45,7 @@ const InternshipDetailPage = () => {
 
   if (!internship) {
     return (
+      <Layout>
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Internship Not Found</h2>
@@ -48,6 +55,7 @@ const InternshipDetailPage = () => {
           </a>
         </div>
       </div>
+      </Layout>
     );
   }
 
@@ -71,6 +79,7 @@ const InternshipDetailPage = () => {
   };
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="relative h-80 overflow-hidden">
@@ -95,7 +104,7 @@ const InternshipDetailPage = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Internships
             </a>
-            
+
             <div className="flex items-start justify-between mt-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
@@ -127,8 +136,11 @@ const InternshipDetailPage = () => {
                   </div>
                 </div>
               </div>
-              
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+
+              <button 
+                onClick={handleApplyClick}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+              >
                 Apply Now
               </button>
             </div>
@@ -201,7 +213,10 @@ const InternshipDetailPage = () => {
                   <p className="text-blue-100 mb-4">
                     Take the first step towards your career goals. Apply now and join our team!
                   </p>
-                  <button className="w-full bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-medium transition-colors">
+                  <button 
+                    onClick={handleApplyClick}
+                    className="w-full bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
                     Apply for this Internship
                   </button>
                 </div>
@@ -224,6 +239,7 @@ const InternshipDetailPage = () => {
       {/* Bottom Margin */}
       <div className="h-16"></div>
     </div>
+    </Layout>
   );
 };
 

@@ -171,7 +171,7 @@ const ContactInfo = () => {
                         <MapPin className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-300 mb-1">Visit our office</p>
+                        <p className="text-sm text-gray-300 mb-1">Visit our Head office</p>
                         <div className="text-white font-medium leading-relaxed">
                           No.2/ 156, 1st Floor, Poonamalle-Avadi Road,<br />
                           Senneerkuppam, Chennai-56
@@ -186,7 +186,7 @@ const ContactInfo = () => {
                         <Clock className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-300 mb-1">Business Hours</p>
+                        <p className="text-sm text-gray-300 mb-1">Office Hours</p>
                         <div className="text-white font-medium">
                           <p>Monday - Friday: 10 AM - 6 PM</p>
                           <p>Saturday & Sunday: Closed</p>
