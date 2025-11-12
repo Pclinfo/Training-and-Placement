@@ -72,16 +72,21 @@ const HeroSection = () => {
 // Training Program Banner
 const TrainingBanner = () => {
   return (
-    <Section className="relative bg-[url('/home/Gemini_Generated.png')] bg-cover bg-center bg-no-repeat py-16 px-6">
-      <div className="bg-black bg-opacity-50 p-40 rounded-lg ">
-        <h2 className="text-2xl font-bold text-white-800 mb-4">
-          Training cum Placement Program – <span className="text-blue-600">Learn, Grow & Get Hired Instantly!</span>
-        </h2>
-        <p className="text-white-600">
-          Kick start your IT career with our Training cum Placement Program. Gain industry-ready skills, work on real-time projects, and get guaranteed placement assistance from top tech companies. Learn from experts, build confidence, and secure your dream job!
-        </p>
-      </div>
-    </Section>
+ <Section className="relative bg-[url('/home/Gemini_Generated.png')] bg-cover bg-center bg-no-repeat py-16 px-6">
+  <div className="bg-black bg-opacity-50 p-8 sm:p-16 md:p-32 lg:p-40 rounded-lg text-center md:text-left max-w-5xl mx-auto">
+    <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">
+      Training cum Placement Program –{" "}
+      <span className="text-blue-600">Learn, Grow & Get Hired Instantly!</span>
+    </h2>
+    <p className="text-gray-200 leading-relaxed text-base sm:text-lg">
+      Kick start your IT career with our Training cum Placement Program. Gain
+      industry-ready skills, work on real-time projects, and get guaranteed
+      placement assistance from top tech companies. Learn from experts, build
+      confidence, and secure your dream job!
+    </p>
+  </div>
+</Section>
+
   );
 };
 
@@ -94,14 +99,14 @@ const CompanyInfo = () => {
   };
   return (
  <Section className="relative bg-[url('/home/bgImage.png')] bg-cover bg-center bg-no-repeat py-16 px-6">
-  <div className="bg-black bg-opacity-50 p-32 rounded-lg ">
-    <h2 className="text-3xl font-bold mb-4 text-white">Build Skills ! <span className="text-blue-600">Gain Experience !</span> Get Hired !
+  <div className="bg-black bg-opacity-50 p-6 sm:p-16 md:p-24 lg:p-32 rounded-lg text-center sm:text-left flex flex-col items-center sm:items-start">
+    <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">Build Skills ! <span className="text-blue-600">Gain Experience !</span> Get Hired !
 </h2>
-    <p className="text-gray-200 mb-6 leading-relaxed">
+    <p className="text-gray-200 mb-6 leading-relaxed text-sm sm:text-base max-w-xl">
           Our Training & Placement Program is designed to help students and fresh graduates become industry-ready professionals. We focus on practical learning, real-time projects, internships, and placement support to prepare students for successful careers in the IT industry.
     </p>
-    <p className='text-gray-200 mb-6 leading-relaxed'>This approach ensures students gain hands-on experience while companies benefit from job-ready talent</p>
-    <Button onClick={handleRedirect} variant="primary" className="bg-blue-500 hover:bg-blue-600">
+    <p className="text-gray-200 mb-6 leading-relaxed text-sm sm:text-base max-w-xl">This approach ensures students gain hands-on experience while companies benefit from job-ready talent</p>
+    <Button onClick={handleRedirect} variant="primary" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-md transition duration-300z">
       More About us
     </Button>
   </div>
