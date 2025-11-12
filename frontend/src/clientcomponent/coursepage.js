@@ -1,6 +1,8 @@
+"use client"
 import React from 'react';
 import { Star, Users, Briefcase, Clock, BookOpen, Target, Zap, Award } from 'lucide-react';
-
+import { useRouter } from "next/navigation";
+// import { Button } from "@/components/ui/button";
 
 // Reusable Button Component
 const Button = ({ children, variant = 'primary', className = '', ...props }) => {
@@ -85,6 +87,11 @@ const TrainingBanner = () => {
 
 // Company Info Section
 const CompanyInfo = () => {
+    const router = useRouter();
+
+  const handleRedirect = () => {
+    router.push("/subcourses");
+  };
   return (
  <Section className="relative bg-[url('/home/bgImage.png')] bg-cover bg-center bg-no-repeat py-16 px-6">
   <div className="bg-black bg-opacity-50 p-32 rounded-lg ">
@@ -94,7 +101,7 @@ const CompanyInfo = () => {
           Our Training & Placement Program is designed to help students and fresh graduates become industry-ready professionals. We focus on practical learning, real-time projects, internships, and placement support to prepare students for successful careers in the IT industry.
     </p>
     <p className='text-gray-200 mb-6 leading-relaxed'>This approach ensures students gain hands-on experience while companies benefit from job-ready talent</p>
-    <Button variant="primary" className="bg-blue-500 hover:bg-blue-600">
+    <Button onClick={handleRedirect} variant="primary" className="bg-blue-500 hover:bg-blue-600">
       More About us
     </Button>
   </div>
@@ -213,11 +220,9 @@ const HowItWorksSection = () => {
 export default function CourseTrainings() {
   return (
     <div className="min-h-screen bg-white">
-      {/* <Navbar /> */}
       <CompanyInfo />
       <HeroSection />
       <TrainingBanner />
-      {/* <IndustriesSection /> */}
       <CTASection 
         title="Ready to Build your Own Project?"
         description="Whether you need guidance and tech services or want to showcase your skills through our cutting-edge tools, we're here to help you succeed."

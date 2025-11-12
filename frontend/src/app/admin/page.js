@@ -379,6 +379,7 @@ export default function AdminPage() {
   return (
     <DashboardLayout user={user} onLogout={handleLogout}>
       <StatsCards stats={stats} />
+      <StatsCards stats={stats} activeTab={activeTab} />
 
       <div className="bg-white rounded-xl shadow-sm">
         <div className="border-b border-gray-200">

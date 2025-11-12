@@ -766,7 +766,7 @@ with app.app_context():
             admin = Admin(
                 username='admin',
                 email='admin@pclinfo.com',
-                password_hash=generate_password_hash('admin123')  # Change this!
+                password_hash=generate_password_hash('admin123')  
             )
             db.session.add(admin)
             db.session.commit()

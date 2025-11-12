@@ -9,13 +9,31 @@ const InternshipClient = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-
+const Section = ({ children, className = '', dark = false }) => {
+  return (
+    <section className={`py-16 ${dark ? 'bg-gray-800 text-white' : 'bg-white'} ${className}`}>
+      <div className="max-w-6xl mx-auto px-4">
+        {children}
+      </div>
+    </section>
+  );
+};
 
   return (
     <div className="bg-white">
-      <div className="flex justify-center items-center p-5">
+      {/* <div className="flex justify-center items-center p-5">
         <img src="/internship/Internships2.webp" alt="Internship Program" className="w-full h-auto max-w-[1650px]" />
-      </div>
+      </div> */}
+       <Section className="relative bg-[url('/home/Gemini.png')] bg-cover bg-center bg-no-repeat py-16 px-6">
+  <div className="bg-black bg-opacity-30 p-32 rounded-lg ">
+    <h1 className="text-3xl font-bold mb-4 text-center text-black">Internships</h1>
+    <p className="text-4xl text-[#004aad] text-center font-semibold">
+       Be part of out growing team.
+    </p>
+    
+  </div>
+</Section>
+
 
       {/* Internship Overview Section */}
       <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-5 lg:gap-20 p-5 mt-10">
@@ -38,6 +56,7 @@ const InternshipClient = () => {
           <p className="text-lg font-normal text-gray-600">Prepare for your future career in a dynamic, collaborative, and innovative environment.</p>
         </div>
       </div>
+
 
       {/* Our Offerings Section */}
       <div className="text-center mt-10">
