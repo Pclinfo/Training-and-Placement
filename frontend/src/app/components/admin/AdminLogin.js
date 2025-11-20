@@ -1,3 +1,5 @@
+// E:\Training-and-Placement\frontend\src\app\components\admin\AdminLogin.js
+
 'use client';
 import React, { useState } from 'react';
 import { Lock, Users, Eye, EyeOff } from 'lucide-react';

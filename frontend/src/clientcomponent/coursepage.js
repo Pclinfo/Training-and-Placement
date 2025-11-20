@@ -2,6 +2,8 @@
 import React from 'react';
 import { Star, Users, Briefcase, Clock, BookOpen, Target, Zap, Award } from 'lucide-react';
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import ContactModelForm from '@/modelform/ContactModalForm';
 // import { Button } from "@/components/ui/button";
 
 // Reusable Button Component
@@ -39,35 +41,74 @@ const Section = ({ children, className = '', dark = false }) => {
   );
 };
 
-// Hero Section Component
 const HeroSection = () => {
+  const [popup, setPopup] = useState(false); // ✅ Correct name
+  const router = useRouter();
+
+  // Disable body scroll when popup is open
+  useEffect(() => {
+    document.body.style.overflow = popup ? "hidden" : "unset";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [popup]);
+
+  // Close popup with ESC key
+  useEffect(() => {
+    const handleEscape = (e) => e.key === "Escape" && setPopup(false);
+    if (popup) document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [popup]);
+
   return (
     <Section className="py-20">
       <div className="grid md:grid-cols-2 gap-12 items-center">
         {/* Text Content */}
         <div>
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            Learn with expert<br />anytime anywhere
+            Learn with expert <br /> anytime anywhere
           </h1>
           <p className="text-gray-600 mb-8">
             Our dream is to help people find the best course online and learn with experts anytime, anywhere.
           </p>
           <div className="flex gap-4">
-            <Button variant="primary">Enroll Now →</Button>
-            <Button variant="secondary">Know More</Button>
+            <Button onClick={() => setPopup(true)} variant="primary">
+              Enroll Now →
+            </Button>
+            <Button onClick={() => setPopup(true)} variant="secondary">
+              Know More
+            </Button>
           </div>
         </div>
 
         {/* Image Section */}
         <div className="relative">
           <img
-            src="/home/Images.png" alt="Learning with experts" className="w-full h-full object-cover" />
+            src="/home/Images.png"
+            alt="Learning with experts"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
+
+      {/* ✅ Corrected Popup usage */}
+      {popup && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+            onClick={() => setPopup(false)}
+          ></div>
+
+          {/* Form Modal */}
+          <div className="relative bg-white rounded-lg max-w-md w-full mx-4 shadow-2xl animate-fade-in">
+            <ContactModelForm close={() => setPopup(false)} />
+          </div>
+        </div>
+      )}
     </Section>
   );
 };
-
 
 // Training Program Banner
 const TrainingBanner = () => {
@@ -118,6 +159,10 @@ const CompanyInfo = () => {
 
 // CTA Section
 const CTASection = ({ title, description, buttons }) => {
+  const router = useRouter();
+  const handleRedirect =() => {
+    router.push("/coursepage/projectpage")
+  }
   return (
     <Section className="py-12 bg-gray-50">
       <div className="text-center">
@@ -125,7 +170,8 @@ const CTASection = ({ title, description, buttons }) => {
         <p className="text-gray-600 mb-8 max-w-2xl mx-auto">{description}</p>
         <div className="flex gap-4 justify-center">
           {buttons.map((btn, index) => (
-            <Button key={index} variant={btn.variant}>
+            <Button key={index} variant={btn.variant}
+            onClick={handleRedirect}>
               {btn.text}
             </Button>
           ))}

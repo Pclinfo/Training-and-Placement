@@ -411,8 +411,6 @@ class InternshipPosting(db.Model):
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
 
-# Update the ProjectEnrollment model to include payment_screenshot
-# Add this field to the ProjectEnrollment class:
 class ProjectEnrollment(db.Model):
     __tablename__ = 'project_enrollments'
     
@@ -432,7 +430,7 @@ class ProjectEnrollment(db.Model):
     team_size = db.Column(db.String(20))
     payment_method = db.Column(db.String(50))
     payment_status = db.Column(db.String(50), default='pending')
-    amount = db.Column(db.Float)
+    amount = db.Column(db.Float)  # ADD THIS LINE
     transaction_id = db.Column(db.String(200))
     validation_code = db.Column(db.String(10))
     payment_screenshot = db.Column(db.String(500))  # NEW FIELD
@@ -443,8 +441,6 @@ class ProjectEnrollment(db.Model):
     project = db.relationship('ProjectPosting', backref='enrollments')
 
 
-# Update the ProjectPosting model to include pricing fields
-# Add these fields to the ProjectPosting class:
 class ProjectPosting(db.Model):
     __tablename__ = 'project_postings'
     
@@ -567,6 +563,16 @@ def create_project_enrollment():
                 preferred_start_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             except ValueError:
                 pass
+            
+                    # Calculate amount from project price (NEW LOGIC)
+        amount = None
+        if project.price:
+            try:
+                # Remove any currency symbols and convert to float
+                amount = float(project.price.replace('₹', '').replace(',', '').strip())
+            except (ValueError, AttributeError):
+                app.logger.warning(f"Could not parse price: {project.price}")
+
         
         # Create enrollment
         enrollment = ProjectEnrollment(
@@ -585,7 +591,8 @@ def create_project_enrollment():
             team_size=request.form.get('team_size'),
             payment_method=request.form.get('payment_method'),
             validation_code=validation_code,
-            payment_screenshot=payment_screenshot_path  # Save screenshot path
+            payment_screenshot=payment_screenshot_path , # Save screenshot path
+            amount=amount  # SET AMOUNT FROM PROJECT PRICE
         )
         
         db.session.add(enrollment)
@@ -603,7 +610,8 @@ def create_project_enrollment():
             'project': project.title,
             'enrollment_id': enrollment_id,
             'team_size': request.form.get('team_size'),
-            'start_date': request.form.get('preferred_start_date')
+            'start_date': request.form.get('preferred_start_date'),
+            'amount': amount  # Include amount in email
         }
         handle_email_notification(email_data)
         
@@ -611,6 +619,7 @@ def create_project_enrollment():
             'success': True,
             'enrollment_id': enrollment_id,
             'project': project.title,
+            'amount': amount,
             'message': 'Enrollment submitted successfully'
         }), 201
         
@@ -1149,9 +1158,10 @@ def delete_course(course_id):
 # --------------- PAYMENT ENDPOINTS -----------------
 @app.route("/api/payments", methods=["POST"])
 def create_payment():
-    data = parse_request_data()
-    
     try:
+        # Handle FormData instead of JSON
+        data = request.form.to_dict()
+        
         # Generate unique payment ID
         payment_id = f"PAY_{str(uuid.uuid4())[:12].upper()}"
         
@@ -1159,6 +1169,20 @@ def create_payment():
         course = Course.query.filter_by(slug=data.get('course_slug')).first()
         if not course:
             return jsonify({'error': 'Course not found'}), 404
+        
+        # Handle payment screenshot upload
+        payment_screenshot_path = None
+        if 'payment_screenshot' in request.files:
+            screenshot_file = request.files['payment_screenshot']
+            if screenshot_file and screenshot_file.filename:
+                try:
+                    payment_screenshot_path = save_payment_screenshot(screenshot_file)
+                    app.logger.info(f"Payment screenshot saved: {payment_screenshot_path}")
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+                except Exception as e:
+                    app.logger.error(f"Error saving screenshot: {e}")
+                    return jsonify({'error': 'Failed to upload screenshot'}), 500
         
         payment = Payment(
             payment_id=payment_id,
@@ -1175,7 +1199,8 @@ def create_payment():
             training_mode=data.get('training_mode'),
             batch_preference=data.get('batch_preference'),
             payment_method=data.get('payment_method'),
-            amount=float(course.total_amount)
+            amount=float(course.total_amount),
+            payment_screenshot=payment_screenshot_path  # Save screenshot path
         )
         
         db.session.add(payment)
@@ -1202,16 +1227,66 @@ def create_payment():
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error creating payment: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
         return jsonify({'error': 'Failed to process payment request'}), 500
+# Replace the get_all_payments function in your backend/connection.py
+# Find the section around line 1228 and replace with this:
+
+# Replace the get_all_payments function in backend/connection.py (around line 1220)
 
 @app.route("/admin/payments", methods=["GET"])
 @jwt_required()
 def get_all_payments():
     try:
-        payments = db.session.query(Payment, Course).join(Course).all()
-        payments_list = []
+        # Get query parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        search = request.args.get('search', '', type=str)
+        status = request.args.get('status', 'all', type=str)
         
-        for payment, course in payments:
+        # Base query
+        query = db.session.query(Payment, Course).join(Course)
+        
+        # Apply filters
+        if search:
+            query = query.filter(
+                db.or_(
+                    Payment.student_name.ilike(f'%{search}%'),
+                    Payment.email.ilike(f'%{search}%'),
+                    Payment.payment_id.ilike(f'%{search}%'),
+                    Course.title.ilike(f'%{search}%')
+                )
+            )
+        
+        if status != 'all':
+            query = query.filter(Payment.payment_status == status)
+        
+        # Order by created_at descending
+        query = query.order_by(Payment.created_at.desc())
+        
+        # Calculate stats
+        total_count = Payment.query.count()
+        pending_count = Payment.query.filter_by(payment_status='pending').count()
+        completed_count = Payment.query.filter_by(payment_status='completed').count()
+        
+        # Calculate total revenue from completed payments
+        total_revenue = db.session.query(db.func.sum(Payment.amount)).filter(
+            Payment.payment_status == 'completed'
+        ).scalar() or 0
+        
+        # Paginate
+        paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        payments_list = []
+        for payment, course in paginated.items:
+            # Build full screenshot URL
+            screenshot_url = None
+            if payment.payment_screenshot:
+                screenshot_url = payment.payment_screenshot
+                if not screenshot_url.startswith('http'):
+                    screenshot_url = f"http://localhost:7000{screenshot_url}"
+            
             payments_list.append({
                 'id': payment.id,
                 'payment_id': payment.payment_id,
@@ -1224,16 +1299,34 @@ def get_all_payments():
                 'payment_status': payment.payment_status,
                 'amount': payment.amount,
                 'training_mode': payment.training_mode,
+                'payment_screenshot': screenshot_url,
                 'preferred_start_date': payment.preferred_start_date.isoformat() if payment.preferred_start_date else None,
                 'created_at': payment.created_at.isoformat()
             })
         
-        return jsonify({'success': True, 'payments': payments_list})
+        return jsonify({
+            'success': True,
+            'payments': payments_list,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': paginated.total,
+                'pages': paginated.pages
+            },
+            'stats': {
+                'total': total_count,
+                'pending': pending_count,
+                'completed': completed_count,
+                'total_revenue': float(total_revenue)
+            }
+        })
         
     except Exception as e:
         app.logger.error(f"Error fetching payments: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
         return jsonify({'error': 'Failed to fetch payments'}), 500
-
+    
 @app.route("/admin/payments/<int:payment_id>/status", methods=["PUT"])
 @jwt_required()
 def update_payment_status(payment_id):
@@ -1901,8 +1994,6 @@ def get_all_projects_admin():
     except Exception as e:
         app.logger.error(f"Error fetching projects: {e}")
         return jsonify({'error': 'Failed to fetch projects'}), 500
-
-
 
 # Update create_project endpoint to handle pricing fields
 @app.route("/admin/projects", methods=["POST"])

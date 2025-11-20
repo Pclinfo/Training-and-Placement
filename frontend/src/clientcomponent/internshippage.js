@@ -24,15 +24,20 @@ const Section = ({ children, className = '', dark = false }) => {
       {/* <div className="flex justify-center items-center p-5">
         <img src="/internship/Internships2.webp" alt="Internship Program" className="w-full h-auto max-w-[1650px]" />
       </div> */}
-       <Section className="relative bg-[url('/home/Gemini.png')] bg-cover bg-center bg-no-repeat py-16 px-6">
-  <div className="bg-black bg-opacity-30 p-32 rounded-lg ">
-    <h1 className="text-3xl font-bold mb-4 text-center text-black">Internships</h1>
-    <p className="text-4xl text-[#004aad] text-center font-semibold">
-       Be part of out growing team.
-    </p>
+      <Section className="relative bg-[url('/home/Gemini.png')] bg-cover bg-center bg-no-repeat py-10 px-4 sm:py-16 sm:px-6">
+  <div className="bg-black bg-opacity-30 p-6 sm:p-16 md:p-32 rounded-lg">
     
+    <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center text-black">
+      Internships
+    </h1>
+
+    <p className="text-xl sm:text-3xl md:text-4xl text-[#004aad] text-center font-semibold leading-snug">
+      Be part of our growing team.
+    </p>
+
   </div>
 </Section>
+
 
 
       {/* Internship Overview Section */}

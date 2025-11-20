@@ -71,48 +71,52 @@ const InternshipsPage = () => {
               </div>
             </div>
             
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilterType('all')}
-                className={`px-4 py-2 rounded-lg ${
-                  filterType === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterType('remote')}
-                className={`px-4 py-2 rounded-lg ${
-                  filterType === 'remote'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Remote
-              </button>
-              <button
-                onClick={() => setFilterType('onsite')}
-                className={`px-4 py-2 rounded-lg ${
-                  filterType === 'onsite'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Onsite
-              </button>
-              <button
-                onClick={() => setFilterType('hybrid')}
-                className={`px-4 py-2 rounded-lg ${
-                  filterType === 'hybrid'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Hybrid
-              </button>
-            </div>
+         <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+  <button
+    onClick={() => setFilterType('all')}
+    className={`px-4 py-2 rounded-lg w-full sm:w-auto ${
+      filterType === 'all'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`}
+  >
+    All
+  </button>
+
+  <button
+    onClick={() => setFilterType('remote')}
+    className={`px-4 py-2 rounded-lg w-full sm:w-auto ${
+      filterType === 'remote'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`}
+  >
+    Remote
+  </button>
+
+  <button
+    onClick={() => setFilterType('onsite')}
+    className={`px-4 py-2 rounded-lg w-full sm:w-auto ${
+      filterType === 'onsite'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`}
+  >
+    Onsite
+  </button>
+
+  <button
+    onClick={() => setFilterType('hybrid')}
+    className={`px-4 py-2 rounded-lg w-full sm:w-auto ${
+      filterType === 'hybrid'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`}
+  >
+    Hybrid
+  </button>
+</div>
+
           </div>
         </div>
 
